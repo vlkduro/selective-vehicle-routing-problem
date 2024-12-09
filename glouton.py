@@ -4,28 +4,50 @@ import matplotlib
 matplotlib.use('TkAgg')  # Nécessaire si une erreur de canva Tkinter à la compilation
 import matplotlib.pyplot as plt
 import random
+import time
 
 
 def draw_graph(G, blocked):
-    pos = nx.spring_layout(G, k=20)  # Utilisation d'un seed pour une disposition stable
+    if G.number_of_nodes() < 30 :
+        pos = nx.spring_layout(G, k=20)  # Utilisation d'un seed pour une disposition stable
 
-    # Dessiner le graphe
-    plt.figure(figsize=(8, 8))  # Taille de la figure
-    nx.draw(
-        G,
-        pos,
-        with_labels=True,
-        node_color="lightblue",
-        edge_color="gray",
-        node_size=800,
-        font_size=10,
-        font_color="black",
-        font_weight="bold"
-    )
-    edge_labels = nx.get_edge_attributes(G, 'coût')  # Obtenir les poids
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
-    plt.title(f"Graphe Complet à {G.number_of_nodes()} nœuds", fontsize=15)
-    plt.show(block=blocked)
+        # Dessiner le graphe
+        plt.figure(figsize=(8, 8))  # Taille de la figure
+        nx.draw(
+            G,
+            pos,
+            with_labels=True,
+            node_color="lightblue",
+            edge_color="gray",
+            node_size=800,
+            font_size=10,
+            font_color="black",
+            font_weight="bold"
+        )
+        edge_labels = nx.get_edge_attributes(G, 'coût')  # Obtenir les poids
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+        plt.title(f"Graphe Complet à {G.number_of_nodes()} nœuds", fontsize=15)
+        plt.show(block=blocked)
+    else :
+        pos = nx.spring_layout(G, k=40)  # Utilisation d'un seed pour une disposition stable
+
+        # Dessiner le graphe
+        plt.figure(figsize=(24, 24))  # Taille de la figure
+        nx.draw(
+            G,
+            pos,
+            with_labels=True,
+            node_color="lightblue",
+            edge_color="gray",
+            node_size=800,
+            font_size=10,
+            font_color="black",
+            font_weight="bold"
+        )
+        edge_labels = nx.get_edge_attributes(G, 'coût')  # Obtenir les poids
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+        plt.title(f"Graphe Complet à {G.number_of_nodes()} nœuds", fontsize=15)
+        plt.show(block=blocked)
 
 
 def create_graph(n):
@@ -50,6 +72,7 @@ def gluttony(flotte, G, profit_dict, L):
     print(NonVisitedClient)
     getAllProfit = 0
     for i in flotte:
+        j = 0 # Index pour répérer le temps max de trajet pour i.
         print(f"Flotte {i}")
         profit[i] = 0
         trajet = ['A']  # Commence toujours par 'A'
@@ -66,7 +89,7 @@ def gluttony(flotte, G, profit_dict, L):
                     distance_to_D = nx.shortest_path_length(G, source=c, target='D', weight='coût')
                     cost = G[trajet[-1]][c]['coût'] + distance_to_D
 
-                    if totalCost + cost <= L and p > bestP:  # Vérifie les contraintes
+                    if totalCost + cost <= L[j] and p > bestP:  # Vérifie les contraintes
                         bestC = c
                         bestP = p
 
@@ -81,33 +104,48 @@ def gluttony(flotte, G, profit_dict, L):
                 break
 
         # Ajoute 'D' (destination finale) si possible
-        if totalCost + nx.shortest_path_length(G, source=trajet[-1], target='D', weight='coût') <= L:
+        if totalCost + nx.shortest_path_length(G, source=trajet[-1], target='D', weight='coût') <= L[j]:
             trajet.append('D')
 
         trajets[i] = trajet  # Enregistre le trajet pour ce véhicule
         profit[i] = totalProfit  # Enregistre le profit total pour ce véhicule
         getAllProfit += totalProfit
         print(f"Trajet pour flotte {i} : {trajet}, profit total = {totalProfit}, pour un coût = {totalCost}")
+        j += 1
 
     return profit, trajets, getAllProfit
 
+
+start = time.time()
+print("=========Algorithme glouton pour la flotte 1========")
 flotte1 = [1, 2]  # Une flotte de 2 véhicules
-L = 30 # Chaque véhicule possède une longueur max de 30
+L = []
+for i in range(len(flotte1)):
+    L.append(random.randint(10,30))
+    print(f"Le coût max du véhicule {i+1} est {L[i]}") # Chaque véhicule possède une longueur max randomisée
 G, profit_dict = create_graph(10)
-print("Algorithme glouton pour la flotte 1")
 _, _, getAll = gluttony(flotte1, G, profit_dict, L)
 print("===========")
 print("Le profit obtenu pour une flotte avec", len(flotte1), "véhicules: ", getAll)
-print("=FIN=")
+print("====FIN====")
+execution_time1 = time.time() - start
+print(f"Exécution time for {G.number_of_nodes()} nodes and {len(flotte1)} vehicules = {execution_time1} ms")
 draw_graph(G, "false")
 
-
-flotte2 = [1, 2, 3, 4, 5]  # Une flotte de 5 véhicules
-M = 10 # Chaque véhicule possède une longueur max de 10
-H, profit_dict2 = create_graph(20)
-print("Algorithme glouton pour la flotte 2")
-_, _, getAll = gluttony(flotte2, H, profit_dict2, M)
+start = time.time()
+print("=========Algorithme glouton pour la flotte 2========")
+flotte2 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  # Une flotte de 2 véhicules
+M = []
+for i in range(len(flotte1)):
+    M.append(random.randint(5,30))
+    print(f"Le coût max du véhicule {i+1} est {M[i]}") # Chaque véhicule possède une longueur max randomisée
+H, profit_dict = create_graph(100)
+_, _, getAll = gluttony(flotte2, H, profit_dict, M)
 print("===========")
 print("Le profit obtenu pour une flotte avec", len(flotte2), "véhicules: ", getAll)
-print("=FIN=")
+print("====FIN====")
+execution_time2 = time.time() - start
+print(f"Exécution time for {H.number_of_nodes()} nodes and {len(flotte2)} vehicules = {execution_time2} ms")
 draw_graph(H, "false")
+
+
