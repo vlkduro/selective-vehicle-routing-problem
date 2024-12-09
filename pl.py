@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('TkAgg')  # Utilise TkAgg comme backend
+
 import matplotlib.pyplot as plt
 import numpy as np
 import xpress as xp
