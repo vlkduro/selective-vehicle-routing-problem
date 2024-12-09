@@ -1,0 +1,562 @@
+\documentclass[a4paper, 12pt, DIV=12]{scrartcl}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\makeatletter
+\makeatother
+\usepackage{blindtext}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{tikzpagenodes}
+\usepackage{tabularx}
+\graphicspath{ {./images/} }
+\usepackage{hyperref}
+\usepackage{biblatex}
+\usepackage{amsmath}
+\usepackage{minted}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+
+\title{Projet P5}
+\author{auteur}
+\date{September 2021}
+
+\begin{document}
+
+\begin{titlepage}
+\thispagestyle{empty}
+
+\begin{tikzpicture}[remember picture,overlay] %logos, north west = haut gauche (comme sur une carte) même chose pour les autres coins
+\node[anchor=north west] at ([yshift=1.4cm]current page text area.north west) {\includegraphics[height=0.5in]{OIP.jpg}};
+\node[anchor=south east] at ([yshift=-2.1cm]current page text area.south east) {\includegraphics[height=0.5in]{OIP.jpg}};
+\end{tikzpicture}
+
+
+   \begin{center}
+    \vspace{0.5cm}
+    \Huge
+   AI09 - Projet\\
+   \Large
+   Problème de tournées sélectives\\
+ \includegraphics[height=8cm]{graph.png}\\
+
+   \vspace{1cm}
+   \vspace{1cm}
+   \vspace{1cm}
+   \normalsize
+   \begin{tabularx}{\textwidth} { %tableau pour créer 2 colonnes 
+   >{\raggedright\arraybackslash}X 
+   >{\raggedright\arraybackslash}X  }
+        \textbf{Étudiants} &
+Clément MARTINS\\
+&Quentin VALAKOU\\
+
+\\
+        & \\
+        \textbf{Enseignants responsables} & Aziz MOUKRIM\\
+      
+        & \\
+        \textbf{Date} &  Automne 2024
+    \end{tabularx}
+   \end{center}
+\end{titlepage}
+
+
+\renewcommand{\thesection}{\Roman{section}}
+
+\begin{tikzpicture}[remember picture,overlay] %logos, north west = haut gauche (comme sur une carte) même chose pour les autres coins
+\node[anchor=south east] at ([yshift=-1cm]current page text area.south east) {\includegraphics[height=0.5in]{OIP.jpg}};
+\end{tikzpicture}
+\section{Introduction}
+    L'objectif de ce rapport est de développer plusieurs méthodes de résolutions pour le problème du TOP (Team Orienteering Problem). Le TOP est modélisé par un graphe complet :  $G = (V,E)$ où $V = \{1,...,n\} \cup \{d,a\} $ est l'ensemble des sommets et $E = \{i,j\} \quad i,j \in V $ est l'ensemble des arcs.\\
+    \begin{itemize}
+        \item Une flotte ${F}$ est composée de $m$ véhicules devant aller livrer des clients. Chaque véhicule possède un parcours de temps limite ${L}$ considéré qu'il ne doit pas dépasser.
+        \item Le sommet $a$ (resp. $d$) représente le point de départ (resp. arrivé) des véhicules.
+        \item Chaque client $i$ est associé à un profit  $P_i$ et ne peut être collecté qu'une seule fois.
+        \item Un temps de trajet $C_{ij}$ est associé à chaque arc $(i,j)$.
+        \item $V$ Représente l'enssemble des sommets visité par un véhicule
+        \item $U$ est l'ensemble des sommets
+    \end{itemize}
+Nous allons donc procéder en deux méthodes distinctes : par la programmation en variables entières, et une adaptation  des algorithmes de TSP/VRP programmés en Python.      
+
+\section{Modélisation pour la programmation linéaire}
+
+La programmation linéaire est une modélisation mathématique par des combinaisons linéaires de variables respectant une liste de contraintes données. Une fois la modélisation mathématique completée, il est possible de calculer les solution grâce à un solveur.
+La complexité est dépendante du problème. 
+
+\textbf{Variables} : 
+\begin{itemize}
+    \item $x^k_{i,j} \in \{0,1\}$ : 1 si le véhicule a parcouru l'arc $(i,j)$, 0 sinon.
+    \item $u^k_i$ : 1 si le véhicule k pass par le sommet i, 0 sinon
+\end{itemize} 
+\textbf{Paramètres} : 
+\begin{itemize}
+    \item $P_i$ : profit associé au client $i$.
+    \item $C_{ij}$ : coût de trajet de l'arc $(i,j)$.
+    \item $L$ : temps de trajet limite des véhicules.
+    \item $m$ : Nombre de véhicules.
+    \item $n$ : Nombre de sommet
+\end{itemize}
+
+\textbf{Objectif} :
+\begin{itemize}
+    \item Maximiser : $Max\sum_{k=1}^{m} \sum_{i=2}^{n} P_i *u^k_i$ : soit le profit pour l'ensemble des tournées réalisés par les $m$ vehicules de la flotte $F$.
+\end{itemize}
+\newpage
+\textbf{Contraintes} :
+\begin{enumerate}
+        \item \textbf{Limite de distance (temps) par véhicule}  
+        \[
+        \forall k \in \{1, \ldots, m\}, \quad \sum_{i \in \text{V}}  C_{i, j} * u_{i}^k \leq L
+        \]
+
+        \item \textbf{Chaque sommet (sauf $a$ et $d$) doit avoir exactement deux arcs entrants et sortants, si $u_{i}^k = 1$. }  
+        \[
+        \forall k \in \{1, \ldots, m\}, \forall i \in \text{V} \setminus \{a, d\}, \quad 
+        2 \cdot u_{i}^k = \sum_{j \in \text{V}, j \neq i} x_{j, i}^k+ \sum_{j \in \text{V}, j \neq i} x_{i, j}^k
+        \]
+
+        \item \textbf{Passe par $a$}  
+        \[
+        \forall k \in \{1, \ldots, m\}, \quad u_{k, a} = 1
+        \]
+
+        \item \textbf{Passe par $d$}  
+        \[
+        \forall k \in \{1, \ldots, m\}, \quad u_{k, d} = 1
+        \]
+
+        \item \textbf{Chaque sommet (sauf $a$ et $d$) est visité au plus une fois}  
+        \[
+        \forall i \in \text{V} \setminus \{a, d\}, \quad \sum_{k =1}^m u_{i}^k \leq 1
+        \]
+
+        \item \textbf{Élimination des sous-tours}  
+        Si un véhicule traverse de $i$ à $j$, il ne peut pas revenir immédiatement de $j$ à $i$ dans le même trajet.  
+        \[
+        \forall k \in \{1, \ldots, m\}, \forall i, j \in \text{V}, i \neq j, \quad 
+        x_{k, i, j} + x_{k, j, i} \leq 1
+        \]
+    \end{enumerate}
+\section{Algorithmes pour le TOP}
+Dans cette partie, nous allons développer deux algorithmes pour résoudre le problème de tournées sélectives.
+\begin{itemize}
+    \item \textbf{Algorithme 1 : algorithme de programmation linéaire}. À l'aide de la modélisation présentée en partie $1$, nous allons écrire un algorithme en langage Python avec les libaires numpy (représentation matricielle, matplotlib (création de graphique), xpress (API de programmation linéaire avec contraintes).
+    \item \textbf{Algorithme 2 : algorithme glouton (ou heuristique gloutonne)} qui va chercher à chaque itération une solution locale optimale. Les algorithmes gloutons ne garantissent pas l'obtention d'une solution optimale et peuvent avoir une complexité supérieure mais sont plus aisés à implémenter. Cette algorithme sera écrit grâce à la librairie networkX pour la création de graphe. 
+\\[10pt]    
+\end{itemize}
+\textbf{L'objectif est de comparer les deux algorithmes sur deux critères : leur capacité à trouver une (ou plusieurs) solutions (optimale ou non) et leur complexité temporelle.}\\[3pt]
+Pour exécuter le code sur votre machine, assurez vous d'installer Python et les dépendances suivantes grâce à Pip sur votre environnement : 
+\begin{minted}[frame=single,linenos,framesep=10pt]{python}
+pip install matplotlib 
+pip install numpy
+pip install networkx
+pip install xpress
+pip install itertools
+\end{minted}
+Le code est disponible sur \href{https://gitlab.utc.fr/qvalakou/ai09_tournees}{Gitlab : Problème de tournées}
+
+\newpage
+\subsection{Algorithme 1 : par la programmation linéaire}
+\subsubsection{Visualisation des Points et des Gains}
+
+Nous avons modélisé les points du problème, incluant les clients, ainsi que les profits associés à chaque client. Les clients sont représentés par des points dans un plan 2D, et chaque point a un profit associé qui est affiché sur le graphique. Le point de départ \( a \) est situé en \( (0, 0) \) et le point d'arrivée \( d \) en \( (10, 10) \).
+
+Voici la visualisation des points (clients, départ, arrivée) et des gains associés :
+\subsubsection{Génération du modèle}
+\begin{minted}[frame=single,linenos,framesep=10pt]{python}
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Nombre de clients
+n_clients = 5
+
+# Positions des clients et points de départ (a) et d'arrivée (d)
+points = {
+    'a': (0, 0, 0),  # Point de départ
+    'd': (10, 10, 0),  # Point d'arrivée
+}
+
+# Génération de positions aléatoires pour les clients
+#ainsi que le gain associé (3 ème chiffre)
+np.random.seed(50)  # Pour la reproductibilité
+for i in range(1, n_clients + 1):
+    points[i] = (np.random.randint(1, 10), 
+                np.random.randint(1, 10), 
+                np.random.randint(1, 100))
+
+# Création du graphique
+plt.figure(figsize=(8, 8))
+for key, value in points.items():
+    plt.scatter(value[0], value[1], 
+        label=f'Client {key}' 
+        if isinstance(key, int) else key)
+    plt.text(value[0] + 0.2, value[1] + 0.2, 
+            f'Gain: {value[2]}', 
+            fontsize=12)
+
+# Titres et légende
+plt.title('Représentation des points', 
+        fontsize=14)
+plt.xlabel('Coordonnée X')
+plt.ylabel('Coordonnée Y')
+plt.legend(loc='upper left')
+plt.grid(True)
+plt.show()
+\end{minted} 
+\subsubsection{Affichage des Coordonnées et Profits des Clients}
+\centering
+\includegraphics[width=1\textwidth]{figure1.png}
+\begin{center}
+Figure 1 - Modélisation des clients avec leur gain associé.
+\end{center}
+\newpage
+\subsubsection{Programmation du problème avec XpressNP}
+On doit d'abord définir les gains, coût, ainsi que nos derniers paramètres:
+\begin{minted}[frame=single,linenos,framesep=10pt]{python}
+#Calculer les distances entre les points
+def distance(p1, p2):
+    return np.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
+
+# Calculer la matrice des distances
+C = {}
+for i in points:
+    for j in points:
+        if i != j:
+            C[(i, j)] = distance(points[i], points[j])
+
+# Définir les gains associés aux clients
+P = {i: points[i][2] for i in range(1, n_clients + 1)}
+
+# Paramètres du problème
+L = 15  # Distance limite par véhicule 
+#(La diagonale est en 14, on leur laisse un peu de marge)
+# Nombre de véhicules
+m = 4  
+# Nombre de sommets (clients + points de départ et d'arrivée)
+n = len(points)  
+
+\end{minted}
+
+Matrice des distances : \\[10pt]
+
+\resizebox{\textwidth}{!}{
+\[
+\begin{array}{c|cccccccccccccccccc}
+  points  & a   & d   & 1   & 2   & 3   & 4   & 5   & 6   & 7   & 8   & 9   & 10  & 11  & 12  & 13  & 14  & 15  \\ \hline
+a   & 0   & 14.14 & 1.41 & 5.38 & 9.22 & 6.71 & 9.43 & 8.06 & 6.32 & 7.07 & 5.00 & 5.00 & 4.12 & 4.12 & 8.06 & 12.04 & 5.10 \\
+d   & 14.14 & 0   & 12.73 & 9.43 & 5.00 & 8.06 & 5.39 & 6.71 & 8.94 & 9.49 & 9.22 & 9.22 & 10.82 & 10.82 & 9.22 & 2.24  & 10.30 \\
+1   & 1.41 & 12.73 & 0   & 4.12 & 7.81 & 5.39 & 8.06 & 6.71 & 5.10 & 6.00 & 3.61 & 3.61 & 3.00 & 3.00 & 7.00 & 10.63 & 4.00 \\
+2   & 5.38 & 9.43 & 4.12 & 0   & 4.47 & 4.47 & 6.00 & 2.83 & 1.00 & 2.24 & 1.41 & 2.83 & 1.41 & 1.41 & 3.16 & 7.62  & 5.00 \\
+3   & 9.22 & 5.00 & 7.81 & 4.47 & 0   & 4.00 & 2.83 & 2.00 & 4.12 & 5.00 & 4.24 & 4.47 & 5.83 & 5.83 & 5.10 & 3.16  & 6.08 \\
+4   & 6.71 & 8.06 & 5.39 & 4.47 & 4.00 & 0   & 2.83 & 4.47 & 5.00 & 6.40 & 3.16 & 2.00 & 5.10 & 5.10 & 7.07 & 5.83  & 2.24 \\
+5   & 9.43 & 5.39 & 8.06 & 6.00 & 2.83 & 2.83 & 0   & 4.47 & 6.08 & 7.28 & 5.10 & 4.47 & 7.07 & 7.07 & 7.62 & 3.16  & 5.00 \\
+6   & 8.06 & 6.71 & 6.71 & 2.83 & 2.00 & 4.47 & 4.47 & 0   & 2.24 & 3.00 & 3.16 & 4.00 & 4.24 & 4.24 & 3.16 & 5.10  & 6.08 \\
+7   & 6.32 & 8.94 & 5.10 & 1.00 & 4.12 & 5.00 & 6.08 & 2.24 & 0   & 1.41 & 2.24 & 3.61 & 2.24 & 2.24 & 2.24 & 7.28  & 5.83 \\
+8   & 7.07 & 9.49 & 6.00 & 2.24 & 5.00 & 6.40 & 7.28 & 3.00 & 1.41 & 0   & 3.61 & 5.00 & 3.00 & 3.00 & 1.00 & 8.06  & 7.21 \\
+9   & 5.00 & 9.22 & 3.61 & 1.41 & 4.24 & 3.16 & 5.10 & 3.16 & 2.24 & 3.61 & 0   & 1.41 & 2.00 & 2.00 & 4.47 & 7.21  & 3.61 \\
+10  & 5.00 & 9.22 & 3.61 & 2.83 & 4.47 & 2.00 & 4.47 & 4.00 & 3.61 & 5.00 & 1.41 & 0   & 3.16 & 3.16 & 5.83 & 7.07  & 2.24 \\
+11  & 4.12 & 10.82 & 3.00 & 1.41 & 5.83 & 5.10 & 7.07 & 4.24 & 2.24 & 3.00 & 2.00 & 3.16 & 0   & 0.00 & 4.00 & 8.94  & 5.00 \\
+12  & 4.12 & 10.82 & 3.00 & 1.41 & 5.83 & 5.10 & 7.07 & 4.24 & 2.24 & 3.00 & 2.00 & 3.16 & 0.00 & 0   & 4.00 & 8.94  & 5.00 \\
+13  & 8.06 & 9.22 & 7.00 & 3.16 & 5.10 & 7.07 & 7.62 & 3.16 & 2.24 & 1.00 & 4.47 & 5.83 & 4.00 & 4.00 & 0   & 8.00  & 8.06 \\
+14  & 12.04 & 2.24 & 10.63 & 7.62 & 3.16 & 5.83 & 3.16 & 5.10 & 7.28 & 8.06 & 7.21 & 7.07 & 8.94 & 8.94 & 8.00 & 0     & 8.06 \\
+15  & 5.10 & 10.30 & 4.00 & 5.00 & 6.08 & 2.24 & 5.00 & 6.08 & 5.83 & 7.21 & 3.61 & 2.24 & 5.00 & 5.00 & 8.06 & 8.06  & 0    \\
+\end{array}
+\]
+}
+
+\subsubsection{Programmation linéaire avec Xpress}
+\begin{minipage}{\textwidth}
+\begin{minted}[frame=single,linenos,framesep=10pt]{python}
+Définition des Variables et de notre objectif:
+model = xp.problem()
+
+# Variables de décision
+x = {(k, i, j): xp.var(vartype=xp.binary) 
+    for k in range(m) 
+    for i in points 
+    for j in points 
+    if i != j
+}
+u = {(k, i): xp.var(vartype=xp.binary) 
+    for k in range(m) 
+    for i in points
+}
+
+# Ajout des variables au modèle
+model.addVariable(x)
+model.addVariable(u)
+
+# Objectif : Maximiser les profits
+model.setObjective(
+    xp.Sum(P[i] * u[k, i] 
+        for k in range(m) 
+        for i in points 
+        if i != 'a' and i != 'd'
+    ),
+    sense=xp.maximize
+)
+\end{minted}
+\end{minipage}%
+
+
+On ajoute ensuite nos contraintes\\[5pt]
+\begin{minted}[frame=single,linenos,framesep=10pt]{python}
+# Contraintes
+
+# Limite de distance (temps) par véhicule
+for k in range(m):
+    model.addConstraint(
+        xp.Sum(C[i, j] * x[k, i, j] 
+            for i in points 
+            for j in points 
+            if i != j
+        ) <= L  # Pas plus de L par véhicule
+    )
+
+# Lier les variables u[k, i] et x[k, i, j] et ainsi 
+obligé qu'il y ai 2 ARC sur chaque sommet
+for k in range(m):
+    for i in points:
+        if i not in ['a', 'd']:
+            model.addConstraint(
+                (2*u[k, i] 
+                == 
+                (xp.Sum(x[k, j, i] for j in points if j != i) + 
+                xp.Sum(x[k,i,j] for j in points if j != i)))
+            )
+    
+#Démare par a
+for k in range(m):
+    model.addConstraint(
+        xp.Sum(x[k, 'a', j] for j in points if j!='a') == 1
+    )
+    model.addConstraint(
+        xp.Sum(u[k, 'a'] ) == 1
+    )
+
+
+#Fini par d
+for k in range(m):
+    model.addConstraint(
+        xp.Sum(x[k, j, 'd'] for j in points if j!='d') == 1
+    )
+    model.addConstraint(
+        xp.Sum(u[k, 'd'] ) == 1
+    )
+
+# Chaque sommet est visité une seul fois
+for i in points:
+    if i not in ['a', 'd']:
+        model.addConstraint(
+            xp.Sum(u[k, i] for k in range(m)) <= 1
+        )
+
+# Ajout des contraintes d'élimination des sous-tours
+for k in range(m):
+    for i, j in itertools.combinations([i for i in points], 2):
+        # Contrainte pour empêcher le sous-tour : si on va de i à j, 
+        # alors on ne peut pas revenir de j à i dans le même trajet
+        model.addConstraint(
+            x[k, i, j] + x[k, j, i] <= 1  
+            # Si x[k, i, j] = 1, alors x[k, j, i] doit être 0
+        )
+
+\end{minted}
+Il nous reste à génerer la meilleure solution et d'afficher les traits correspondants au meilleur chemin\\
+\begin{minted}[frame=single,linenos,framesep=10pt]{python}
+
+# Résolution
+model.solve()
+
+# Résultats
+# Vérification de la solution
+routes = {k: [] for k in range(m)}  
+# Stocker les routes pour chaque véhicule
+total_costs = {k: 0 for k in range(m)}  
+# Stocker les coûts totaux pour chaque véhicule
+total_profits = {k: 0 for k in range(m)}  
+# Stocker les gains totaux pour chaque véhicule
+
+print("\nSolution optimale trouvée :")
+for k in range(m):
+    print(f"\nVéhicule {k+1}:")
+    for i in points:
+        for j in points:
+            if i != j and model.getSolution(x[k, i, j]) > 0.5:
+                routes[k].append((i, j))
+                cost = C[i, j]  # Coût pour le chemin de i à j
+                total_costs[k] += cost
+                print(f" - Traverse de {i} à {j} (Coût : {cost})")
+    
+    # Calcul des gains des clients pour ce véhicule
+    vehicle_profit = sum(
+        P[i] * model.getSolution(u[k, i]) 
+            for i in points 
+            if i != 'a' and i != 'd'
+    )
+    total_profits[k] = vehicle_profit
+
+    # Affichage des totaux
+    print(f"  Coût total pour le véhicule {k+1} : {total_costs[k]}")
+    print(f"  Gain total pour le véhicule {k+1} : {total_profits[k]}")
+
+# Calcul des totaux globaux
+total_cost = sum(total_costs.values())
+total_profit = sum(total_profits.values())
+
+# Résumé global
+print("\nRésumé global :")
+print(f"Gain total : {total_profit}")
+# Visualisation du graphe
+plt.figure(figsize=(8, 8))
+colors = ['blue', 'green', 'red', 'orange', 'purple']  
+# Couleurs pour les véhicules
+
+# Tracer les points
+for i in points:
+    plt.scatter(points[i][0], 
+                points[i][1], 
+                label=f"{i} ({points[i][2]})",
+                s=100)
+
+# Tracer les lignes pour chaque véhicule
+for k, route in routes.items():
+    for (i, j) in route:
+        plt.plot([points[i][0], 
+                    points[j][0]], 
+                    [points[i][1], 
+                    points[j][1]], 
+                    color=colors[k % len(colors)], 
+                    linestyle='-', 
+                    linewidth=2)
+
+# Ajouter des labels pour chaque point (exclure 'a' et 'd') 
+#On affichera le gain associé à chaque point
+for i in points:
+    if i not in ['a', 'd']:
+        plt.text(points[i][0] + 0.3, 
+                points[i][1], f"{P[i]}", 
+                fontsize=12)
+    else :
+        plt.text(points[i][0] + 0.3, 
+                points[i][1], f"{i}", 
+                fontsize=12)
+
+
+# Légende
+plt.legend()
+plt.title("Solution du problème de VRP")
+plt.show()
+\end{minted}
+
+\includegraphics[width=1\linewidth]{figure2.png}
+\begin{center}
+Figure 2 - Solution optimale via Xpress. 
+\end{center}y
+
+Elle correspond au chemin:
+\subsubsection{Tableau des résultats}
+
+\textbf{Véhicule 1:}
+\begin{itemize}
+    \item Traverse de $a$ à $1$ (Coût : $1.41$)
+    \item Traverse de $1$ à $10$ (Coût : $3.60$)
+    \item Traverse de $10$ à $3$ (Coût : $4.47$)
+    \item Traverse de $3$ à $14$ (Coût : $3.16$)
+    \item Traverse de $14$ à $d$ (Coût : $2.23$)
+\end{itemize}
+\textbf{Résumé Véhicule 1:}
+\begin{itemize}
+    \item Coût total : $14.89$
+    \item Gain total : $149$
+\end{itemize}
+
+\textbf{Véhicule 2:}
+\begin{itemize}
+    \item Traverse de $a$ à $4$ (Coût : $7.70$)
+    \item Traverse de $4$ à $5$ (Coût : $2.82$)
+    \item Traverse de $5$ à $d$ (Coût : $5.38$)
+\end{itemize}
+\textbf{Résumé Véhicule 2:}
+\begin{itemize}
+    \item Coût total : $14.92$
+    \item Gain total : $175$
+\end{itemize}
+
+\textbf{Véhicule 3:}
+\begin{itemize}
+    \item Traverse de $a$ à $12$ (Coût : $4.12$)
+    \item Traverse de $12$ à $11$ (Coût : $0$)
+    \item Traverse de $11$ à $2$ (Coût : $1.41$)
+    \item Traverse de $2$ à $d$ (Coût : $9.43$)
+\end{itemize}
+\textbf{Résumé Véhicule 3:}
+\begin{itemize}
+    \item Coût total : $14.97$
+    \item Gain total : $75$
+\end{itemize}
+
+\textbf{Véhicule 4:}
+\begin{itemize}
+    \item Traverse de $a$ à $9$ (Coût : $5.00$)
+    \item Traverse de $9$ à $6$ (Coût : $3.16$)
+    \item Traverse de $6$ à $d$ (Coût : $6.70$)
+\end{itemize}
+\textbf{Résumé Véhicule 4:}
+\begin{itemize}
+    \item Coût total : $14.87$
+    \item Gain total : $48$
+\end{itemize}
+
+\textbf{Résumé global :}
+\begin{itemize}
+    \item Coût total de l'ensemble de la flotte  : $59.6538$
+    \item Gain total de l'ensemble de la flotte : $447$
+\end{itemize}\\[10pt]
+\textbf{La solution à été trouvé en 3.82sec}
+\newpage
+\subsection{Algorithme 2 : Heuristique gloutonne}
+L'algorithme glouton pour ce problème de tournée sélective est simple :
+\begin{algorithm}
+\caption{Algorithme glouton pour le TOP}
+\begin{algorithmic}[1]
+\Procedure{Glouton}{$F, G$}
+    \State $trajet \gets []$
+    \State $NonVisitedClient \gets G.nodes()$
+       \For{$i$ in range $F$}
+       \State $traget \gets [A]$
+       \State $totalCost \gets 0$
+       \State $totalProfit \gets 0$
+            \While{$NonVisitedClient$ is not $null$}
+                \State $bestC \gets null$
+                \State $bestP \gets 0$
+                \For{$c$ in range $trajet.voisin$}
+                    \If{$trajet.voisin$ in $NonVisitedClient$}
+                        \State $p \gets c.profit()$ 
+                        \State $cost \gets c.cost() +d.cost()$
+                        \If{$totalCost + cost \leq L $}
+                            \If{$profit > bestP$}
+                                \State $bestP \gets profit$
+                                \State $bestC \gets c$
+                            \EndIf
+                        \EndIf
+                    \EndIf
+                \EndFor
+                \If{$bestC$ not null}
+                    \State $trajet \gets trajet.append(bestC)$
+                    \State $totalCost \gets totalCost +c.cost()$
+                    \State $totalProfit \gets totalProfit +c.profit()$
+                    \State $NonVisitedClient.remove(c)$
+                \EndIf
+            \EndWhile                
+        \EndFor
+    \State \Return $trajet, profit, G$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+
+\end{document}
