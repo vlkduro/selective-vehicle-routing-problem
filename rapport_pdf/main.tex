@@ -17,6 +17,10 @@
 \usepackage{hyperref}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{lastpage}
+\usepackage[ruled,vlined]{algorithm2e}
+
+
 
 
 \title{Projet P5}
@@ -29,7 +33,6 @@
 \thispagestyle{empty}
 
 \begin{tikzpicture}[remember picture,overlay] %logos, north west = haut gauche (comme sur une carte) même chose pour les autres coins
-\node[anchor=north west] at ([yshift=1.4cm]current page text area.north west) {\includegraphics[height=0.5in]{OIP.jpg}};
 \node[anchor=south east] at ([yshift=-2.1cm]current page text area.south east) {\includegraphics[height=0.5in]{OIP.jpg}};
 \end{tikzpicture}
 
@@ -39,7 +42,7 @@
     \Huge
    AI09 - Projet\\
    \Large
-   Problème de tournées sélectives\\
+   Problème de tournées sélectives\\[30pt]
  \includegraphics[height=8cm]{graph.png}\\
 
    \vspace{1cm}
@@ -55,29 +58,31 @@ Clément MARTINS\\
 
 \\
         & \\
-        \textbf{Enseignants responsables} & Aziz MOUKRIM\\
+        \textbf{Enseignant responsable} & Aziz MOUKRIM\\
       
         & \\
-        \textbf{Date} &  Automne 2024
+        \textbf{Semestre} &  Automne 2024 \\[30pt]
     \end{tabularx}
    \end{center}
+\begin{center}
+Ce document comporte \pageref{LastPage} pages. 
+\end{center}
 \end{titlepage}
 
 
 \renewcommand{\thesection}{\Roman{section}}
 
 \begin{tikzpicture}[remember picture,overlay] %logos, north west = haut gauche (comme sur une carte) même chose pour les autres coins
-\node[anchor=south east] at ([yshift=-1cm]current page text area.south east) {\includegraphics[height=0.5in]{OIP.jpg}};
 \end{tikzpicture}
 \section{Introduction}
     L'objectif de ce rapport est de développer plusieurs méthodes de résolutions pour le problème du TOP (Team Orienteering Problem). Le TOP est modélisé par un graphe complet :  $G = (V,E)$ où $V = \{1,...,n\} \cup \{d,a\} $ est l'ensemble des sommets et $E = \{i,j\} \quad i,j \in V $ est l'ensemble des arcs.\\
     \begin{itemize}
         \item Une flotte ${F}$ est composée de $m$ véhicules devant aller livrer des clients. Chaque véhicule possède un parcours de temps limite ${L}$ considéré qu'il ne doit pas dépasser.
-        \item Le sommet $a$ (resp. $d$) représente le point de départ (resp. arrivé) des véhicules.
+        \item Le sommet $a$  représente le point de départ des véhicules.
+        \item Le sommt $d$   représente le dépot des véhicules
         \item Chaque client $i$ est associé à un profit  $P_i$ et ne peut être collecté qu'une seule fois.
         \item Un temps de trajet $C_{ij}$ est associé à chaque arc $(i,j)$.
-        \item $V$ Représente l'enssemble des sommets visité par un véhicule
-        \item $U$ est l'ensemble des sommets
+        \item $V$ est l'ensemble des sommets
     \end{itemize}
 Nous allons donc procéder en deux méthodes distinctes : par la programmation en variables entières, et une adaptation  des algorithmes de TSP/VRP programmés en Python.      
 
@@ -102,7 +107,7 @@ La complexité est dépendante du problème.
 
 \textbf{Objectif} :
 \begin{itemize}
-    \item Maximiser : $Max\sum_{k=1}^{m} \sum_{i=2}^{n} P_i *u^k_i$ : soit le profit pour l'ensemble des tournées réalisés par les $m$ vehicules de la flotte $F$.
+    \item Maximiser : $Max\sum_{k=1}^{m} \sum_{i=1}^{n} P_i *u^k_i$ : soit le profit pour l'ensemble des tournées réalisés par les $m$ vehicules de la flotte $F$.
 \end{itemize}
 \newpage
 \textbf{Contraintes} :
@@ -138,12 +143,24 @@ La complexité est dépendante du problème.
         \[
         \forall k \in \{1, \ldots, m\}, \forall i, j \in \text{V}, i \neq j, \quad 
         x_{k, i, j} + x_{k, j, i} \leq 1
-        \]
+        \]\\[10pt]
+        Cependant pour éliminer définitivement les sous tour il faut aussi forcer le client de départ ($a$) à ne pas avoir d'arc entrant, et le client d'arriver ($d$) à ne pas avoir d'arc sortant
+
+        \begin{itemize}
+            \item \textbf{Pas d'arc entrant pour $a$}
+            \[
+            \forall k \in {1, \ldots, m}, \sum_{i=1}^n \quad k_{i, a}^k = 0
+            \]
+            \item \textbf{Pas d'arc sortant pour $d$}
+            \[
+            \forall k \in {1, \ldots, m}, \sum_{i=1}^n \quad k_{d, i}^k = 0
+            \]
+        \end{itemize}
     \end{enumerate}
 \section{Algorithmes pour le TOP}
-Dans cette partie, nous allons développer deux algorithmes pour résoudre le problème de tournées sélectives.
+Dans cette partie, nous allons développer deux algorithmes pour résoudre le problème de tournées sélectives. \\[5pt]
 \begin{itemize}
-    \item \textbf{Algorithme 1 : algorithme de programmation linéaire}. À l'aide de la modélisation présentée en partie $1$, nous allons écrire un algorithme en langage Python avec les libaires numpy (représentation matricielle, matplotlib (création de graphique), xpress (API de programmation linéaire avec contraintes).
+    \item \textbf{Algorithme 1 : algorithme de programmation linéaire}. À l'aide de la modélisation présentée en partie $1$, nous allons écrire un algorithme en langage Python avec les libaires numpy (représentation matricielle, matplotlib (création de graphique), xpress (API de programmation linéaire avec contraintes). \\[5pt]
     \item \textbf{Algorithme 2 : algorithme glouton (ou heuristique gloutonne)} qui va chercher à chaque itération une solution locale optimale. Les algorithmes gloutons ne garantissent pas l'obtention d'une solution optimale et peuvent avoir une complexité supérieure mais sont plus aisés à implémenter. Cette algorithme sera écrit grâce à la librairie networkX pour la création de graphe. 
 \\[10pt]    
 \end{itemize}
@@ -169,6 +186,7 @@ Voici la visualisation des points (clients, départ, arrivée) et des gains asso
 \begin{minted}[frame=single,linenos,framesep=10pt]{python}
 import matplotlib.pyplot as plt
 import numpy as np
+import xpress as xp
 
 # Nombre de clients
 n_clients = 5
@@ -183,8 +201,8 @@ points = {
 #ainsi que le gain associé (3 ème chiffre)
 np.random.seed(50)  # Pour la reproductibilité
 for i in range(1, n_clients + 1):
-    points[i] = (np.random.randint(1, 10), 
-                np.random.randint(1, 10), 
+    points[i] = (np.random.uniform(1, 10), 
+                np.random.uniform(1, 10), 
                 np.random.randint(1, 100))
 
 # Création du graphique
@@ -207,14 +225,28 @@ plt.grid(True)
 plt.show()
 \end{minted} 
 \subsubsection{Affichage des Coordonnées et Profits des Clients}
-\centering
-\includegraphics[width=1\textwidth]{figure1.png}
 \begin{center}
+\includegraphics[width=1\textwidth]{figure1.png}
 Figure 1 - Modélisation des clients avec leur gain associé.
 \end{center}
 \newpage
 \subsubsection{Programmation du problème avec XpressNP}
-On doit d'abord définir les gains, coût, ainsi que nos derniers paramètres:
+
+Xpress est un solveur de programmation mathématique qui applique des techniques avancées pour trouver des solutions optimales dans des problèmes complexes de \textit{programmation linéaire} (PL), comme celui que nous avons formulé. \\[10pt]
+
+Xpress utilise les étapes suivantes pour résoudre ce problème : \\[10pt]
+
+\begin{itemize}
+    \item \textbf{Modélisation du problème} : Nous avons formulé le problème comme un problème de tournée de véhicules où chaque véhicule doit parcourir un ensemble de clients, avec des contraintes sur la distance maximale qu'il peut parcourir et la capacité qu'il peut transporter.\\[10pt]
+    \item \textbf{Branch-and-Bound et Branch-and-Cut} : Xpress utilise ces algorithmes pour explorer les différentes solutions possibles en divisant le problème en sous-problèmes. Les solutions qui ne sont pas prometteuses sont rapidement écartées à l'aide de la méthode de coupe, ce qui réduit considérablement l'espace de recherche.\\[10pt]
+    \item \textbf{Heuristiques} : Afin de trouver des solutions faisables rapidement, Xpress applique des heuristiques telles que les heuristiques gloutonnes et de proximité. Ces heuristiques permettent de générer des solutions initiales qui peuvent ensuite être améliorées.\\[10pt]
+\end{itemize}
+
+Dans notre cas, Xpress permet de résoudre efficacement un problème combinatoire complexe en utilisant une approche hybride d'optimisation, combinant la recherche exacte et des techniques heuristiques. 
+Cela garantit à la fois la faisabilité de la solution et une optimisation rapide des objectifs.\\[10pt]
+\newpage
+\subsubsection{Définition du modèle avec XpressNP}
+On doit d'abord finir notre modélisation en définissant \textbf{les gains}, \textbf{coût}, ainsi que nos \textbf{paramètres} (Nombre de véhicule, Distance maximum, nombre de Sommet):
 \begin{minted}[frame=single,linenos,framesep=10pt]{python}
 #Calculer les distances entre les points
 def distance(p1, p2):
@@ -239,8 +271,7 @@ m = 4
 n = len(points)  
 
 \end{minted}
-
-Matrice des distances : \\[10pt]
+\textbf{Matrice des distances généré :}\\[10pt]
 
 \resizebox{\textwidth}{!}{
 \[
@@ -268,10 +299,21 @@ d   & 14.14 & 0   & 12.73 & 9.43 & 5.00 & 8.06 & 5.39 & 6.71 & 8.94 & 9.49 & 9.2
 }
 
 \subsubsection{Programmation linéaire avec Xpress}
+La première étape consiste à définir le modèle d'optimisation avec Xpress.
+
+Nous définissons les variables de décision :\\
+\begin{itemize}
+    \item $x_{ij}^k$
+    \item \textbf{$u_i^k$}
+\end{itemize}
+Ces variables sont ensuite ajoutées au modèle.
+
+L'objectif du modèle est de maximiser les profits, ce qui est formulé à l'aide de la fonction \texttt{setObjective}. 
+
 \begin{minipage}{\textwidth}
 \begin{minted}[frame=single,linenos,framesep=10pt]{python}
-Définition des Variables et de notre objectif:
-model = xp.problem()
+# Définition des Variables et de notre objectif
+model = xp.problem() # instance d'un solveur Xpress
 
 # Variables de décision
 x = {(k, i, j): xp.var(vartype=xp.binary) 
@@ -300,9 +342,10 @@ model.setObjective(
 )
 \end{minted}
 \end{minipage}%
-
-
-On ajoute ensuite nos contraintes\\[5pt]
+\newpage
+\subsubsection{Définition des contraintes avec Xpress}
+Nous pouvons ensuite définir avec Xpress nos \textbf{contraintes} vue précédament
+\begin{center}
 \begin{minted}[frame=single,linenos,framesep=10pt]{python}
 # Contraintes
 
@@ -328,7 +371,7 @@ for k in range(m):
                 xp.Sum(x[k,i,j] for j in points if j != i)))
             )
     
-#Démare par a
+#Commence par a
 for k in range(m):
     model.addConstraint(
         xp.Sum(x[k, 'a', j] for j in points if j!='a') == 1
@@ -336,15 +379,23 @@ for k in range(m):
     model.addConstraint(
         xp.Sum(u[k, 'a'] ) == 1
     )
+    #Pas de sous tour avec a
+    model.addConstraint(
+         xp.Sum(x[k, j, 'a'] for j in points if j!='a') == 0
+    )
 
 
-#Fini par d
+#Termine par d
 for k in range(m):
     model.addConstraint(
         xp.Sum(x[k, j, 'd'] for j in points if j!='d') == 1
     )
     model.addConstraint(
         xp.Sum(u[k, 'd'] ) == 1
+    )
+    #Pas de sous tour avec d
+    model.addConstraint(
+         xp.Sum(x[k, 'd', j] for j in points if j!='d') == 0
     )
 
 # Chaque sommet est visité une seul fois
@@ -365,100 +416,17 @@ for k in range(m):
         )
 
 \end{minted}
-Il nous reste à génerer la meilleure solution et d'afficher les traits correspondants au meilleur chemin\\
-\begin{minted}[frame=single,linenos,framesep=10pt]{python}
+\end{center}
+\newpage
+\subsubsection{Génération de la solution}
+Finalement on génère la Solution avec Xpress avec \textbf{model.solve()} 
 
-# Résolution
-model.solve()
-
-# Résultats
-# Vérification de la solution
-routes = {k: [] for k in range(m)}  
-# Stocker les routes pour chaque véhicule
-total_costs = {k: 0 for k in range(m)}  
-# Stocker les coûts totaux pour chaque véhicule
-total_profits = {k: 0 for k in range(m)}  
-# Stocker les gains totaux pour chaque véhicule
-
-print("\nSolution optimale trouvée :")
-for k in range(m):
-    print(f"\nVéhicule {k+1}:")
-    for i in points:
-        for j in points:
-            if i != j and model.getSolution(x[k, i, j]) > 0.5:
-                routes[k].append((i, j))
-                cost = C[i, j]  # Coût pour le chemin de i à j
-                total_costs[k] += cost
-                print(f" - Traverse de {i} à {j} (Coût : {cost})")
-    
-    # Calcul des gains des clients pour ce véhicule
-    vehicle_profit = sum(
-        P[i] * model.getSolution(u[k, i]) 
-            for i in points 
-            if i != 'a' and i != 'd'
-    )
-    total_profits[k] = vehicle_profit
-
-    # Affichage des totaux
-    print(f"  Coût total pour le véhicule {k+1} : {total_costs[k]}")
-    print(f"  Gain total pour le véhicule {k+1} : {total_profits[k]}")
-
-# Calcul des totaux globaux
-total_cost = sum(total_costs.values())
-total_profit = sum(total_profits.values())
-
-# Résumé global
-print("\nRésumé global :")
-print(f"Gain total : {total_profit}")
-# Visualisation du graphe
-plt.figure(figsize=(8, 8))
-colors = ['blue', 'green', 'red', 'orange', 'purple']  
-# Couleurs pour les véhicules
-
-# Tracer les points
-for i in points:
-    plt.scatter(points[i][0], 
-                points[i][1], 
-                label=f"{i} ({points[i][2]})",
-                s=100)
-
-# Tracer les lignes pour chaque véhicule
-for k, route in routes.items():
-    for (i, j) in route:
-        plt.plot([points[i][0], 
-                    points[j][0]], 
-                    [points[i][1], 
-                    points[j][1]], 
-                    color=colors[k % len(colors)], 
-                    linestyle='-', 
-                    linewidth=2)
-
-# Ajouter des labels pour chaque point (exclure 'a' et 'd') 
-#On affichera le gain associé à chaque point
-for i in points:
-    if i not in ['a', 'd']:
-        plt.text(points[i][0] + 0.3, 
-                points[i][1], f"{P[i]}", 
-                fontsize=12)
-    else :
-        plt.text(points[i][0] + 0.3, 
-                points[i][1], f"{i}", 
-                fontsize=12)
-
-
-# Légende
-plt.legend()
-plt.title("Solution du problème de VRP")
-plt.show()
-\end{minted}
-
-\includegraphics[width=1\linewidth]{figure2.png}
+Voici dans notre example le résultat de la solution optimal trouvé et tracé:
 \begin{center}
-Figure 2 - Solution optimale via Xpress. 
-\end{center}y
+\includegraphics[width=1\linewidth]{figure2.png}
 
-Elle correspond au chemin:
-\subsubsection{Tableau des résultats}
+Figure 2 - Solution optimale via Xpress. 
+\end{center}
 
 \textbf{Véhicule 1:}
 \begin{itemize}
@@ -471,7 +439,7 @@ Elle correspond au chemin:
 \textbf{Résumé Véhicule 1:}
 \begin{itemize}
     \item Coût total : $14.89$
-    \item Gain total : $149$
+    \item Gain total : $149$\\
 \end{itemize}
 
 \textbf{Véhicule 2:}
@@ -483,7 +451,7 @@ Elle correspond au chemin:
 \textbf{Résumé Véhicule 2:}
 \begin{itemize}
     \item Coût total : $14.92$
-    \item Gain total : $175$
+    \item Gain total : $175$\\
 \end{itemize}
 
 \textbf{Véhicule 3:}
@@ -496,7 +464,7 @@ Elle correspond au chemin:
 \textbf{Résumé Véhicule 3:}
 \begin{itemize}
     \item Coût total : $14.97$
-    \item Gain total : $75$
+    \item Gain total : $75$\\
 \end{itemize}
 
 \textbf{Véhicule 4:}
@@ -508,55 +476,222 @@ Elle correspond au chemin:
 \textbf{Résumé Véhicule 4:}
 \begin{itemize}
     \item Coût total : $14.87$
-    \item Gain total : $48$
+    \item Gain total : $48$\\
 \end{itemize}
 
 \textbf{Résumé global :}
 \begin{itemize}
     \item Coût total de l'ensemble de la flotte  : $59.6538$
-    \item Gain total de l'ensemble de la flotte : $447$
-\end{itemize}\\[10pt]
-\textbf{La solution à été trouvé en 3.82sec}
+    \item Gain total de l'ensemble de la flotte : $447$\\[5pt]
+\end{itemize}
+Voici quelques points clés à noter :
+\begin{itemize}
+    \item \textbf{Respect de la contrainte de distance limite :}
+     Pour tous les véhicules, les coûts totaux sont proches de la limite de 15, ce qui indique que la contrainte de distance a été bien gérée. Cela signifie que les véhicules n'ont pas effectué de trajets trop longs, respectant ainsi la capacité de parcours définie par le modèle.
+     \item \textbf{Temps de résolution :} Le modèle a été résolu en 3.82 secondes, ce qui témoigne de l'efficacité du solveur Xpress pour ce type de problème.
+\end{itemize}
+
+
+\subsubsection{Complexité de l'algorithme 1}
+\textbf{Théorique} \\[5pt]
+La complexité peut être divisée en deux parties :
+\begin{itemize}
+    \item Complexité de la création de la matrice, des contraintes et variables
+    \item Complexité de la résolution du solveur. 
+\end{itemize}
+
+La création de la matrice de distance est de $O(n^2)$ pour $n$ sommets (clients). De plus, la condition de vérification des contraintes par véhicule est de l'ordre de $O(n^2*m)$ avec $m$ nombre de véhicules de la flotte. L'affichage quand à lui à une complexité de $O(m*n)$. \\[5pt]
+Pour la complexité du solveur, l'algorithme du simplexe a une complexité dans le pire des cas exponentielle. Dans notre situation cette dernière peut être bornée par $O(n^3)$. \\
+
+On en déduit une complexité générale bornée par $O(n^3)$. \\[10pt]
+
+\textbf{Temps d'exécution et paramètres} \\[5pt]
+Pour plusieurs couples de $n$ clients et $m$ véhicules nous avons comparé le temps d'exécution pour évaluer le poids de chaque paramètre dans la durée d'exécution. 
+\begin{itemize}
+    \item Pour $n = \textbf{15}$ et $m = \textbf{4}$ \\
+            Le temps est de \textbf{20 sec}
+    \item Pour $n = \textbf{20}$ et $m = \textbf{4}$ \\
+            Le temps est de \textbf{1100 sec}
+     \item Pour $n = \textbf{15}$ et $m = \textbf{3}$ \\
+            Le temps est de \textbf{7.75 sec}
+    \item Pour $n = \textbf{20}$ et $m = \textbf{3}$ \\
+            Le temps est de \textbf{14.8 sec}
+    \item Pour $n = \textbf{15}$ et $m = \textbf{2}$ \\
+            Le temps est de \textbf{0.57 sec}
+    \item Pour $n = \textbf{20}$ et $m = \textbf{2}$ \\
+            Le temps est de \textbf{0.55 sec}
+\end{itemize} 
+
+\begin{center}
+    \includegraphics[width=\linewidth]{tempsPL.png}
+    Graphique 1 - Temps d'exécution par rapport au nombre de véhicule
+\end{center}\\[10pt]
+
+Comme on peux le voir ci-dessus le nombre de clients et le nombre de véhicule augment de manière exponentielle le temps de recherche de l'algorithme
 \newpage
 \subsection{Algorithme 2 : Heuristique gloutonne}
-L'algorithme glouton pour ce problème de tournée sélective est simple :
-\begin{algorithm}
+L'heuristique gloutonne cherche une solution optimale locale pour trouver une solution optimale globale. Elle est une implémentation plutôt naive pour ce problème du TOP. En effet, l'algorithme glouton peut trouver une solution, mais elle n'est souvent pas optimale. 
+\subsubsection{Algorithme glouton}
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwIn{$F, G, L$}
+\KwOut{Le trajet optimal, le profit associé, et le graphe modifié $G$}
+\State $trajet \gets []$\; 
+\State $NonVisitedClient \gets G.nodes()$\;
+\State \For{$i \gets 1$ \textbf{to} $F$}{
+    \State $trajet \gets [A]$\;
+    \State $totalCost \gets 0$\;
+    \State $totalProfit \gets 0$\;
+    \State \While{$NonVisitedClient$ is not $null$}{
+       \State $bestC \gets null$\;
+        \State $bestP \gets 0$\;
+        \State \For{$c$ \textbf{in} $trajet.voisin$}{
+            \If{$c$ \textbf{in} $NonVisitedClient$ \textbf{and} $c \neq D$ \textbf{and} $c \neq A$}{
+                \State $p \gets c.profit()$\;
+                \State $cost \gets c.cost() + d.cost()$\;
+                \If{$totalCost + cost \leq L$}{
+                    \If{$p > bestP$}{
+                        \State $bestP \gets p$\;
+                        \State $bestC \gets c$\;
+                    }
+                }
+            }
+        }
+        \If{$bestC$ \textbf{not} $null$}{
+           \State  $trajet \gets trajet.append(bestC)$\;
+            \State $totalCost \gets totalCost + c.cost()$\;
+            \State $totalProfit \gets totalProfit + c.profit()$\;
+            \State $NonVisitedClient.remove(c)$\;
+        }
+    }
+}
+\Return{$trajet, profit, G$}\;
 \caption{Algorithme glouton pour le TOP}
-\begin{algorithmic}[1]
-\Procedure{Glouton}{$F, G$}
-    \State $trajet \gets []$
-    \State $NonVisitedClient \gets G.nodes()$
-       \For{$i$ in range $F$}
-       \State $traget \gets [A]$
-       \State $totalCost \gets 0$
-       \State $totalProfit \gets 0$
-            \While{$NonVisitedClient$ is not $null$}
-                \State $bestC \gets null$
-                \State $bestP \gets 0$
-                \For{$c$ in range $trajet.voisin$}
-                    \If{$trajet.voisin$ in $NonVisitedClient$}
-                        \State $p \gets c.profit()$ 
-                        \State $cost \gets c.cost() +d.cost()$
-                        \If{$totalCost + cost \leq L $}
-                            \If{$profit > bestP$}
-                                \State $bestP \gets profit$
-                                \State $bestC \gets c$
-                            \EndIf
-                        \EndIf
-                    \EndIf
-                \EndFor
-                \If{$bestC$ not null}
-                    \State $trajet \gets trajet.append(bestC)$
-                    \State $totalCost \gets totalCost +c.cost()$
-                    \State $totalProfit \gets totalProfit +c.profit()$
-                    \State $NonVisitedClient.remove(c)$
-                \EndIf
-            \EndWhile                
-        \EndFor
-    \State \Return $trajet, profit, G$
-\EndProcedure
-\end{algorithmic}
 \end{algorithm}
+
+\newpage
+\subsubsection{Code Python}
+Le code Python est le suivant : 
+\begin{minted}[frame=single,linenos,framesep=10pt]{python}
+def gluttony(flotte, G, profit_dict, L):
+    # Stocker les profits pour chaque véhicule
+    profit = {} 
+    # Stocker les trajets pour chaque véhicule
+    trajets = {i: [] for i in flotte}  
+    # Liste des clients non visités
+    NonVisitedClient = list(G.nodes).copy() 
+    getAllProfit = 0
+    for i in flotte:
+        j = 0 # Index pour répérer le temps max de trajet pour i.
+        print(f"Flotte {i}")
+        profit[i] = 0
+        trajet = ['A']  # Commence toujours par 'A'
+        totalCost = 0
+        totalProfit = 0
+
+        # Tant qu'il reste des clients à visiter
+        while NonVisitedClient:  
+            bestC = None
+            bestP = 0
+            # Parcourt les voisins du dernier nœud
+            for c in list(G.neighbors(trajet[-1])):  
+                if c in NonVisitedClient and c != 'D' and c != 'A':  
+            # Un client n'est visitable qu'une fois, d
+            # de même on ne repasse pas par A
+                    p = profit_dict[c]
+                     # Fonction networkX du plus court chemin
+                     # Dijkstra
+                    distance_to_D = nx.shortest_path_length(G, 
+                    source=c, target='D', weight='coût')
+                    cost = G[trajet[-1]][c]['coût'] + distance_to_D 
+            # Le coût est la distance vers le voisin
+            # Si le coût empêche d'arriver jusqu'a D,
+            # on élimine cette possibilité
+            # Vérifie les contraintes
+                    if totalCost + cost <= L[j] and p > bestP:  
+                        bestC = c
+                        bestP = p
+
+            if bestC is not None:  # Si un client valide est trouvé
+                trajet.append(bestC)
+                totalCost += G[trajet[-2]][bestC]['coût']
+                totalProfit += profit_dict[bestC]
+                NonVisitedClient.remove(bestC)
+            else:
+            # Aucun client viable, termine le trajet pour ce véhicule
+                break
+
+        # Ajoute 'D' (destination finale) si possible
+        if totalCost + nx.shortest_path_length(G, 
+        source=trajet[-1], target='D', weight='coût') <= L[j]:
+            trajet.append('D')
+
+        trajets[i] = trajet  # Enregistre le trajet pour ce véhicule
+        profit[i] = totalProfit  
+        # Enregistre le profit total pour ce véhicule
+        getAllProfit += totalProfit
+    
+        j += 1
+
+    return profit, trajets, getAllProfit
+\end{minted}
+
+\begin{center}
+\includegraphics[width=1\linewidth]{figure_glouton1vrai.png}
+Figure 3 - Représentation du graphe complet $G(V,E)$ par NetworkX pour $V = n =10$. 
+\end{center}
+
+\begin{center}
+\includegraphics[width=1\linewidth]{Screenshot 2024-12-10 at 17.40.32.png}
+Tableau 1 - Résultats obtenu par la tournée pour le graphe $G$ et $F = [1,2]$
+\end{center}
+
+\newpage
+\subsubsection{Complexité de l'algorithme 2}
+\textbf{Théorique} \\[5pt]
+
+
+La recherche du chemin est simple mais peu optimisée : 
+\begin{itemize}
+    \item On commence par A puis on cherche le voisin avec le meilleur profit, sachant que c'est un graphe complet on a $n$ voisins : $O(n)$
+    \item On calcul ensuite le coût pour y aller mais aussi le coût pour aller à l'arrivée afin d'être sûr de respecter la condition $\leq L$, on utilise l'algorithme du plus court chemin par NetworkX. Par défaut, c'est l'algorithme de Djikstra qui est utilisé soit $O((n+m)    log(n))$. 
+    \item Cependant, ces opérations précédentes devrons être répétées $n$ fois si aucun chemin n'a été trouvé. 
+    \item Puis il passera au voisin suivant.
+\end{itemize}
+Asymptomatiquement, on estime que $m$ est négligeable face à $n$. On en déduit une complexité globale de $n*O(n^2(n+m)*log(n)) = O(n^3log(n))$.
+On a une complexité exponentielle qui augmentera considérablement la durée d'éxecution pour un nombre de client important (on estime qu'a partir de $n >100$ on commence à perdre signicativement.\\[10pt]
+
+\textbf{Temps d'exécution et paramètres} \\[5pt]
+Pour plusieurs couples de $n$ clients et $m$ véhicules nous avons comparé le temps d'exécution pour évaluer le poids de chaque paramètre dans la durée d'exécution. 
+\begin{itemize}
+    \item Pour $n = \textbf{10}$ et $m = \textbf{2}$ \\
+            Le temps est de \textbf{3 $\mu s$}
+    \item Pour $n = \textbf{100}$ et $m = \textbf{10}$ \\
+            Le temps est de \textbf{3 $ms$}
+    \item Pour $n = \textbf{500}$ et $m = \textbf{10}$ \\
+            Le temps est de \textbf{621 $ms$}
+     \item Pour $n = \textbf{1000}$ et $m = \textbf{10}$ \\
+            Le temps est de \textbf{> 10 $min$} \\[10pt]
+\end{itemize} 
+
+Nous pouvons constater que le temps de recherche est bien inférieur à l'algorithme avec XpressNP.
+\subsubsection{Critique}
+On a observé que la complexité théorique se reflète sur le temps d'exécution. Non seulement l'heuristique gloutonne ne permet pas d'obtenir une solution optimale (en particulier pour des $n$ et $m$ important), elle devient rapidement inutilisable pour un graphe complet avec beaucoup de sommets. Cet approche n'est donc pas envisageable dans l'industrie car il n'est pas rare d'avoir à établir un plan de livraison pour $n >100$ personnes. \\[5pt]
+De plus, de l'implémentation réalisée, lors de la recherche, l'algorithme parcourt la flotte (une liste) par l'index 0 pour aller à $n$. Comme aucun client ne peut être visité plus d'une fois, le véhicule avec le chemin le plus optimale sera toujours le véhicule en première position (index 0) car c'est celui qui aura le plus de possibilités. C'est donc aussi celui où la recherche d'un meilleur trajet est le plus long. Plus nous irons loin dans la flotte, plus le temps de recherche individuel pour chaque véhicule sera écourté. Pour un nombre faible de client et un nombre important de véhicules, nous pouvons arriver à une solution absurde où le véhicule 0 parcourera tous les clients (si $L$ assez grand), laissant les autres avec aucun client. 
+\newpage
+\section{Conclusion}
+
+Dans cette étude, nous avons comparé deux approches pour résoudre le problème de la tournée de véhicules : l'algorithme glouton et la programmation linéaire (PL) avec le solveur Xpress.\\
+\begin{itemize}
+    \item \textbf{Algorithme glouton}
+    Cette approche, bien que très rapide, n'a pas nécessairement conduit à des solutions optimales. En effet, l'algorithme glouton fait des choix locaux à chaque étape sans tenir compte de l'impact global de ces choix. Par conséquent, bien qu'il soit capable de fournir une solution rapidement, les solutions obtenues ne maximisent pas toujours les profits.\\
+    \item \textbf{Programmation linéaire avec Xpress}
+    En revanche, le modèle de programmation linéaire avec le solveur Xpress permet de trouver des solutions optimales, en tenant compte de l'ensemble des contraintes et en maximisant l'objectif global (les profits dans notre cas). Bien que cette approche soit plus lente que l'algorithme glouton, elle fournit des solutions qui respectent à la fois la limite de distance et maximisent les gains de manière plus équilibrée entre les véhicules.\\
+\end{itemize}
+
+En résumé, \textbf{l'algorithme glouton }est plus rapide pour un nombre limité de client à visiter, mais il peut mener à des solutions sous-optimales en raison de son approche locale et myope. À l'inverse, la \textbf{programmation linéaire avec Xpress}, bien que plus coûteuse en termes de temps de calcul, permet d'obtenir des solutions plus optimales et plus équilibrées.\\
+
+Les deux solutions sont viables en fonction des choix de cahcun (temps de calcul ou maximiser les profits ?)
 
 
 \end{document}
