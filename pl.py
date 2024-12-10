@@ -1,6 +1,3 @@
-import matplotlib
-matplotlib.use('TkAgg')  # Utilise TkAgg comme backend
-
 import matplotlib.pyplot as plt
 import numpy as np
 import xpress as xp
@@ -16,9 +13,8 @@ points = {
 }
 
 # Génération de positions aléatoires pour les clients ainsi que le gain associé (3ème chiffre)
-np.random.seed(50)  # Pour la reproductibilité
 for i in range(1, n_clients + 1):
-    points[i] = (np.random.randint(1, 10), np.random.randint(1, 10), np.random.randint(1, 100))
+    points[i] = (np.random.uniform(1, 10), np.random.uniform(1, 10), np.random.randint(1, 100))
 
 # Calculer les distances entre les points (euclidienne)
 def distance(p1, p2):
@@ -39,7 +35,7 @@ P = {i: points[i][2] for i in range(1, n_clients + 1)}
 print(P)
 # Paramètres du problème
 L = 15  # Distance limite par véhicule
-m = 2  # Nombre de véhicules
+m = 2# Nombre de véhicules
 n = len(points)  # Nombre de sommets (clients + points de départ et d'arrivée)
 
 # Modélisation en programmation linéaire
@@ -83,6 +79,10 @@ for k in range(m):
     model.addConstraint(
         xp.Sum(u[k, 'a'] ) == 1
     )
+    #Pas de sous tour avec a
+    model.addConstraint(
+        xp.Sum(x[k, j, 'a'] for j in points if j!='a') == 0
+    )
 
 
 #Fini par d
@@ -92,6 +92,10 @@ for k in range(m):
     )
     model.addConstraint(
         xp.Sum(u[k, 'd'] ) == 1
+    )
+    #Pas de sous tour avec d
+    model.addConstraint(
+        xp.Sum(x[k, 'd', j] for j in points if j!='d') == 0
     )
 
 # Chaque sommet est visité une seul fois
