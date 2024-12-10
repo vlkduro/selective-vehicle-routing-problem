@@ -84,11 +84,12 @@ def gluttony(flotte, G, profit_dict, L):
             bestP = 0
 
             for c in list(G.neighbors(trajet[-1])):  # Parcourt les voisins du dernier nœud
-                if c in NonVisitedClient and c != 'D' and c != 'A':  # Ne pas revisiter les clients ou aller directement à 'D'
+                if c in NonVisitedClient and c != 'D' and c != 'A':  # Un client n'est visitable qu'une fois, d
+                    # de même on ne repasse pas par A
                     p = profit_dict[c]
-                    distance_to_D = nx.shortest_path_length(G, source=c, target='D', weight='coût')
-                    cost = G[trajet[-1]][c]['coût'] + distance_to_D
-
+                    distance_to_D = nx.shortest_path_length(G, source=c, target='D', weight='coût') # Fonction networkX
+                    cost = G[trajet[-1]][c]['coût'] + distance_to_D # Le coût est la distance vers le voisin
+                    # Si le coût empêche d'arriver jusqu'a D on élimine cette possibilité
                     if totalCost + cost <= L[j] and p > bestP:  # Vérifie les contraintes
                         bestC = c
                         bestP = p
@@ -110,7 +111,7 @@ def gluttony(flotte, G, profit_dict, L):
         trajets[i] = trajet  # Enregistre le trajet pour ce véhicule
         profit[i] = totalProfit  # Enregistre le profit total pour ce véhicule
         getAllProfit += totalProfit
-        print(f"Trajet pour flotte {i} : {trajet}, profit total = {totalProfit}, pour un coût = {totalCost}")
+        print(f"Trajet pour véhicule {i} : {trajet}, profit total = {totalProfit}, pour un coût = {totalCost}")
         j += 1
 
     return profit, trajets, getAllProfit
@@ -134,7 +135,7 @@ draw_graph(G, "false")
 
 start = time.time()
 print("=========Algorithme glouton pour la flotte 2========")
-flotte2 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  # Une flotte de 2 véhicules
+flotte2 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  # Une flotte de 10 véhicules
 M = []
 for i in range(len(flotte1)):
     M.append(random.randint(5,30))
