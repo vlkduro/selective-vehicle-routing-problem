@@ -1,32 +1,43 @@
-## AI09 - Projet de résolution du TOP
+# **Selective Vehicle Routing Problem**
 
-Ce Git contient deux fichiers Python pour la résolution du problème de tournée de véhicules sélective.
+This repository contains two Python files for solving the **Selective Vehicle Routing Problem**.
 
-- glouton.py : algorithme glouton pour la recherche d'une solution
-- pl.py : algorithme de résolution par programmation linéaire
+- **`glouton.py`**: greedy algorithm for finding a solution  
+- **`pl.py`**: linear programming–based solver  
 
-### Installer les dépendances
+---
 
-Les algorithmes utilisent plusieurs librairies Python pour fonctionner.
-Installez-les via Pip pour une utilisation simple.
+## Install Dependencies
 
-```
+The algorithms require several Python libraries.  
+Install them via **pip** for simple usage:
+
+```bash
 pip install matplotlib
 pip install numpy
 pip install networkx
 pip install xpress
 ```
-Si vous avez déjà le paquet :
-```
-pip install <nom_du_paquet> --upgrade
+
+If you already have a package installed, you can upgrade it:
+
+```bash
+pip install <package_name> --upgrade
 ```
 
+---
 
-### Copier les fichiers
+## Copy the Files
 
-Si vous souhaitez avoir une copie locale :
-```
-cd C:\votre_chemin
+To get a local copy of the project:
+
+```bash
+cd C:\your_path
 git clone https://gitlab.utc.fr/qvalakou/ai09_tournees.git
 ```
 
+---
+
+## Report
+
+The file **`AI09_projet.pdf`** and the LaTeX source code (**`main.tex`**) are available in the `rapport_pdf` folder.  
