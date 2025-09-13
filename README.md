@@ -33,7 +33,7 @@ To get a local copy of the project:
 
 ```bash
 cd C:\your_path
-git clone https://gitlab.utc.fr/qvalakou/ai09_tournees.git
+git clone https://github.com/vlkduro/selective-vehicle-routing-problem.git
 ```
 
 ---
